@@ -3,57 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Points Table</title>
+    <title>Admin - Update Score</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; background-image: radial-gradient(circle at top right, #1e293b, #0f172a); color: #f8fafc; min-height: 100vh; padding: 2rem; display: flex; justify-content: center; align-items: flex-start; }
-        .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 2rem; }
+        .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 1.5rem; }
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2rem; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); }
-        h2 { margin-bottom: 1.5rem; color: #38bdf8; text-align: center; font-weight: 600; letter-spacing: 1px; }
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: center; }
-        th, td { padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
-        th { color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; }
-        tbody tr { transition: 0.2s ease-in-out; }
-        tbody tr:hover { background: rgba(255, 255, 255, 0.05); transform: scale(1.01); }
-        tbody tr:nth-child(1) td { color: #22c55e; font-weight: bold; }
-        .team-name-cell { text-align: left; font-weight: bold; }
-        .points-cell { font-weight: bold; color: #38bdf8; font-size: 1.1rem; }
+        h2 { margin-bottom: 1.5rem; color: #38bdf8; text-align: center; font-weight: 600; letter-spacing: 1px; font-size: 1.4rem; }
+        
+        .add-team-section { text-align: center; padding: 1.5rem; }
+        .add-team-flex { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+        
+        .match-inputs { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .team-input { display: flex; gap: 0.5rem; align-items: center; }
+        input, select { padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.4); color: white; outline: none; transition: 0.3s; font-size: 1rem; }
+        input:focus, select:focus { border-color: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.3); }
+        select { width: 160px; cursor: pointer; }
+        select option { background-color: #1e293b; color: white; }
+        input[type="number"] { width: 70px; text-align: center; font-weight: bold; }
+        .vs { font-weight: bold; color: #94a3b8; font-size: 1.2rem; }
+        button { width: 100%; padding: 1rem; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
+        
+        .submit-btn { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; }
+        .submit-btn:hover { background: linear-gradient(135deg, #0284c7, #1d4ed8); transform: translateY(-2px); }
+        .btn-auto { width: auto; padding: 0.75rem 1.5rem; }
+        .reset-btn { background: transparent; border: 1px solid #ef4444; color: #ef4444; margin-top: 1rem; }
+        .reset-btn:hover { background: #ef4444; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="table-container glass-card">
-            <h2>Live Standings</h2>
-            <div class="table-wrapper">
-                <table id="pointsTable">
-                    <thead>
-                        <tr>
-                            <th>Pos</th>
-                            <th style="text-align: left;">Team</th>
-                            <th>P</th>
-                            <th>W</th>
-                            <th>D</th>
-                            <th>L</th>
-                            <th>GF</th>
-                            <th>GA</th>
-                            <th>GD</th>
-                            <th>Pts</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <!-- Live Data from Firestore -->
-                    </tbody>
-                </table>
+        
+        <!-- NEW: Add Team Section -->
+        <div class="glass-card add-team-section">
+            <h2>➕ Register New Team</h2>
+            <div class="add-team-flex">
+                <input type="text" id="newTeamName" placeholder="Enter Team Name" style="width: 250px;">
+                <button type="button" id="addTeamBtn" class="submit-btn btn-auto">Add Team</button>
             </div>
+        </div>
+
+        <!-- Update Score Section -->
+        <div class="admin-panel glass-card">
+            <h2>⚽ Update Match Score</h2>
+            <form id="scoreForm">
+                <div class="match-inputs">
+                    <div class="team-input">
+                        <select id="team1" required>
+                            <option value="" disabled selected>Team A</option>
+                            <!-- Teams will load here automatically -->
+                        </select>
+                        <input type="number" id="score1" placeholder="Goals" required min="0">
+                    </div>
+                    <span class="vs">VS</span>
+                    <div class="team-input">
+                        <input type="number" id="score2" placeholder="Goals" required min="0">
+                        <select id="team2" required>
+                            <option value="" disabled selected>Team B</option>
+                            <!-- Teams will load here automatically -->
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="submit-btn">Push Live Update</button>
+                <button type="button" id="resetBtn" class="reset-btn">Reset Database</button>
+            </form>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-        // Your exact Firebase config
+        // IMPORTANT: PASTE YOUR FIREBASE CONFIG HERE!
         const firebaseConfig = {
             apiKey: "AIzaSyCQxEPlevVjVR5dOy-Ke1fQev3IEe1Giho",
             authDomain: "cointable-81ad7.firebaseapp.com",
@@ -65,41 +86,98 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-        const tableBody = document.getElementById('tableBody');
-
-        // Listen for live updates from Firestore
         const docRef = doc(db, "tournament", "data");
-        
+
+        // 1. DYNAMICALLY LOAD TEAMS INTO DROPDOWN
         onSnapshot(docRef, (docSnap) => {
-            tableBody.innerHTML = '';
+            const t1Select = document.getElementById('team1');
+            const t2Select = document.getElementById('team2');
             
-            if (!docSnap.exists() || !docSnap.data().teams) return;
+            // Keep the selected value if user is currently selecting
+            const val1 = t1Select.value;
+            const val2 = t2Select.value;
 
-            let teams = Object.values(docSnap.data().teams);
+            t1Select.innerHTML = '<option value="" disabled selected>Team A</option>';
+            t2Select.innerHTML = '<option value="" disabled selected>Team B</option>';
 
-            // Auto Sorting Logic: Points > GD > GF
-            teams.sort((a, b) => {
-                if (b.points !== a.points) return b.points - a.points;
-                if (b.gd !== a.gd) return b.gd - a.gd;
-                return b.gf - a.gf;
-            });
+            if (docSnap.exists() && docSnap.data().teams) {
+                const teamsData = docSnap.data().teams;
+                const teamNames = Object.keys(teamsData).sort(); // Sort Alphabetically
+                
+                teamNames.forEach(team => {
+                    t1Select.innerHTML += `<option value="${team}">${team}</option>`;
+                    t2Select.innerHTML += `<option value="${team}">${team}</option>`;
+                });
+            }
+            
+            if(val1) t1Select.value = val1;
+            if(val2) t2Select.value = val2;
+        });
 
-            teams.forEach((team, index) => {
-                const gdStr = team.gd > 0 ? '+' + team.gd : team.gd;
-                const row = `<tr>
-                    <td>${index + 1}</td>
-                    <td class="team-name-cell">${team.name}</td>
-                    <td>${team.played}</td>
-                    <td>${team.win}</td>
-                    <td>${team.draw}</td>
-                    <td>${team.lose}</td>
-                    <td>${team.gf}</td>
-                    <td>${team.ga}</td>
-                    <td>${gdStr}</td>
-                    <td class="points-cell">${team.points}</td>
-                </tr>`;
-                tableBody.insertAdjacentHTML('beforeend', row);
-            });
+        // 2. ADD NEW TEAM LOGIC
+        document.getElementById('addTeamBtn').addEventListener('click', async () => {
+            const newTeamInput = document.getElementById('newTeamName');
+            const newTeam = newTeamInput.value.trim().toUpperCase();
+            
+            if(!newTeam) return alert("Please enter a valid team name!");
+
+            const docSnap = await getDoc(docRef);
+            let data = docSnap.exists() ? (docSnap.data().teams || {}) : {};
+
+            if(data[newTeam]) {
+                return alert("This team is already registered!");
+            }
+
+            // Create empty stats for the new team
+            data[newTeam] = { name: newTeam, played: 0, win: 0, draw: 0, lose: 0, gf: 0, ga: 0, gd: 0, points: 0 };
+            await setDoc(docRef, { teams: data });
+            
+            newTeamInput.value = ''; // Clear input
+            alert(`${newTeam} added successfully! You can now select it from the dropdown.`);
+        });
+
+        // 3. SCORE UPDATE LOGIC
+        document.getElementById('scoreForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const t1 = document.getElementById('team1').value;
+            const s1 = parseInt(document.getElementById('score1').value);
+            const t2 = document.getElementById('team2').value;
+            const s2 = parseInt(document.getElementById('score2').value);
+
+            if(!t1 || !t2) return alert("Please select both teams!");
+            if(t1 === t2) return alert("A team cannot play against itself!");
+
+            const docSnap = await getDoc(docRef);
+            let data = docSnap.exists() ? (docSnap.data().teams || {}) : {};
+
+            function calcStats(team, gf, ga) {
+                if (!data[team]) data[team] = { name: team, played: 0, win: 0, draw: 0, lose: 0, gf: 0, ga: 0, gd: 0, points: 0 };
+                let t = data[team];
+                t.played++; t.gf += gf; t.ga += ga;
+                if (gf > ga) { t.win++; t.points += 3; }
+                else if (gf === ga) { t.draw++; t.points += 1; }
+                else { t.lose++; }
+                t.gd = t.gf - t.ga;
+            }
+
+            calcStats(t1, s1, s2);
+            calcStats(t2, s2, s1);
+
+            await setDoc(docRef, { teams: data });
+            
+            alert("Match score updated live!");
+            document.getElementById('score1').value = '';
+            document.getElementById('score2').value = '';
+            document.getElementById('team1').value = '';
+            document.getElementById('team2').value = '';
+        });
+
+        // 4. RESET TOURNAMENT
+        document.getElementById('resetBtn').addEventListener('click', async () => {
+            if(confirm("Are you sure? This will delete all teams and scores!")) {
+                await setDoc(docRef, { teams: {} });
+                alert("Database reset successful!");
+            }
         });
     </script>
 </body>
