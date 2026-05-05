@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Points Table</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0f172a; background-image: radial-gradient(circle at top right, #1e293b, #0f172a); color: #f8fafc; min-height: 100vh; padding: 2rem; display: flex; justify-content: center; align-items: flex-start; }
+        .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 2rem; }
+        .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2rem; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); }
+        h2 { margin-bottom: 1.5rem; color: #38bdf8; text-align: center; font-weight: 600; letter-spacing: 1px; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        th, td { padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        th { color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; }
+        tbody tr { transition: 0.2s ease-in-out; }
+        tbody tr:hover { background: rgba(255, 255, 255, 0.05); transform: scale(1.01); }
+        tbody tr:nth-child(1) td { color: #22c55e; font-weight: bold; }
+        .team-name-cell { text-align: left; font-weight: bold; }
+        .points-cell { font-weight: bold; color: #38bdf8; font-size: 1.1rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="table-container glass-card">
+            <h2>Live Standings</h2>
+            <div class="table-wrapper">
+                <table id="pointsTable">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th style="text-align: left;">Team</th>
+                            <th>P</th>
+                            <th>W</th>
+                            <th>D</th>
+                            <th>L</th>
+                            <th>GF</th>
+                            <th>GA</th>
+                            <th>GD</th>
+                            <th>Pts</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Live Data from Firestore -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+
+        // Your exact Firebase config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQxEPlevVjVR5dOy-Ke1fQev3IEe1Giho",
+            authDomain: "cointable-81ad7.firebaseapp.com",
+            projectId: "cointable-81ad7",
+            storageBucket: "cointable-81ad7.firebasestorage.app",
+            messagingSenderId: "800992600615",
+            appId: "1:800992600615:web:0cf3ada8216b05332d6402"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const tableBody = document.getElementById('tableBody');
+
+        // Listen for live updates from Firestore
+        const docRef = doc(db, "tournament", "data");
+        
+        onSnapshot(docRef, (docSnap) => {
+            tableBody.innerHTML = '';
+            
+            if (!docSnap.exists() || !docSnap.data().teams) return;
+
+            let teams = Object.values(docSnap.data().teams);
+
+            // Auto Sorting Logic: Points > GD > GF
+            teams.sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.gd !== a.gd) return b.gd - a.gd;
+                return b.gf - a.gf;
+            });
+
+            teams.forEach((team, index) => {
+                const gdStr = team.gd > 0 ? '+' + team.gd : team.gd;
+                const row = `<tr>
+                    <td>${index + 1}</td>
+                    <td class="team-name-cell">${team.name}</td>
+                    <td>${team.played}</td>
+                    <td>${team.win}</td>
+                    <td>${team.draw}</td>
+                    <td>${team.lose}</td>
+                    <td>${team.gf}</td>
+                    <td>${team.ga}</td>
+                    <td>${gdStr}</td>
+                    <td class="points-cell">${team.points}</td>
+                </tr>`;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        });
+    </script>
+</body>
+</html>
