@@ -7,13 +7,9 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; background-image: radial-gradient(circle at top right, #1e293b, #0f172a); color: #f8fafc; min-height: 100vh; padding: 2rem; display: flex; justify-content: center; align-items: flex-start; }
-        .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 1.5rem; }
+        .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 2rem; }
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2rem; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); }
-        h2 { margin-bottom: 1.5rem; color: #38bdf8; text-align: center; font-weight: 600; letter-spacing: 1px; font-size: 1.4rem; }
-        
-        .add-team-section { text-align: center; padding: 1.5rem; }
-        .add-team-flex { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
-        
+        h2 { margin-bottom: 1.5rem; color: #38bdf8; text-align: center; font-weight: 600; letter-spacing: 1px; }
         .match-inputs { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
         .team-input { display: flex; gap: 0.5rem; align-items: center; }
         input, select { padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.4); color: white; outline: none; transition: 0.3s; font-size: 1rem; }
@@ -22,36 +18,26 @@
         select option { background-color: #1e293b; color: white; }
         input[type="number"] { width: 70px; text-align: center; font-weight: bold; }
         .vs { font-weight: bold; color: #94a3b8; font-size: 1.2rem; }
-        button { width: 100%; padding: 1rem; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; }
-        
+        button { width: 100%; padding: 1rem; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-bottom: 0.5rem; }
         .submit-btn { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; }
         .submit-btn:hover { background: linear-gradient(135deg, #0284c7, #1d4ed8); transform: translateY(-2px); }
-        .btn-auto { width: auto; padding: 0.75rem 1.5rem; }
-        .reset-btn { background: transparent; border: 1px solid #ef4444; color: #ef4444; margin-top: 1rem; }
+        .reset-btn { background: transparent; border: 1px solid #ef4444; color: #ef4444; }
         .reset-btn:hover { background: #ef4444; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
-        
-        <!-- NEW: Add Team Section -->
-        <div class="glass-card add-team-section">
-            <h2>➕ Register New Team</h2>
-            <div class="add-team-flex">
-                <input type="text" id="newTeamName" placeholder="Enter Team Name" style="width: 250px;">
-                <button type="button" id="addTeamBtn" class="submit-btn btn-auto">Add Team</button>
-            </div>
-        </div>
-
-        <!-- Update Score Section -->
         <div class="admin-panel glass-card">
-            <h2>⚽ Update Match Score</h2>
+            <h2>Admin Control Panel</h2>
             <form id="scoreForm">
                 <div class="match-inputs">
                     <div class="team-input">
                         <select id="team1" required>
                             <option value="" disabled selected>Team A</option>
-                            <!-- Teams will load here automatically -->
+                            <option value="REAL MADRID">REAL MADRID</option>
+                            <option value="BARCELONA">BARCELONA</option>
+                            <option value="ARSENAL">ARSENAL</option>
+                            <option value="BAYERN">BAYERN</option>
                         </select>
                         <input type="number" id="score1" placeholder="Goals" required min="0">
                     </div>
@@ -60,7 +46,10 @@
                         <input type="number" id="score2" placeholder="Goals" required min="0">
                         <select id="team2" required>
                             <option value="" disabled selected>Team B</option>
-                            <!-- Teams will load here automatically -->
+                            <option value="REAL MADRID">REAL MADRID</option>
+                            <option value="BARCELONA">BARCELONA</option>
+                            <option value="ARSENAL">ARSENAL</option>
+                            <option value="BAYERN">BAYERN</option>
                         </select>
                     </div>
                 </div>
@@ -72,9 +61,9 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
-        // IMPORTANT: PASTE YOUR FIREBASE CONFIG HERE!
+        // Your exact Firebase config
         const firebaseConfig = {
             apiKey: "AIzaSyCQxEPlevVjVR5dOy-Ke1fQev3IEe1Giho",
             authDomain: "cointable-81ad7.firebaseapp.com",
@@ -86,57 +75,10 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Define the Firestore document reference
         const docRef = doc(db, "tournament", "data");
 
-        // 1. DYNAMICALLY LOAD TEAMS INTO DROPDOWN
-        onSnapshot(docRef, (docSnap) => {
-            const t1Select = document.getElementById('team1');
-            const t2Select = document.getElementById('team2');
-            
-            // Keep the selected value if user is currently selecting
-            const val1 = t1Select.value;
-            const val2 = t2Select.value;
-
-            t1Select.innerHTML = '<option value="" disabled selected>Team A</option>';
-            t2Select.innerHTML = '<option value="" disabled selected>Team B</option>';
-
-            if (docSnap.exists() && docSnap.data().teams) {
-                const teamsData = docSnap.data().teams;
-                const teamNames = Object.keys(teamsData).sort(); // Sort Alphabetically
-                
-                teamNames.forEach(team => {
-                    t1Select.innerHTML += `<option value="${team}">${team}</option>`;
-                    t2Select.innerHTML += `<option value="${team}">${team}</option>`;
-                });
-            }
-            
-            if(val1) t1Select.value = val1;
-            if(val2) t2Select.value = val2;
-        });
-
-        // 2. ADD NEW TEAM LOGIC
-        document.getElementById('addTeamBtn').addEventListener('click', async () => {
-            const newTeamInput = document.getElementById('newTeamName');
-            const newTeam = newTeamInput.value.trim().toUpperCase();
-            
-            if(!newTeam) return alert("Please enter a valid team name!");
-
-            const docSnap = await getDoc(docRef);
-            let data = docSnap.exists() ? (docSnap.data().teams || {}) : {};
-
-            if(data[newTeam]) {
-                return alert("This team is already registered!");
-            }
-
-            // Create empty stats for the new team
-            data[newTeam] = { name: newTeam, played: 0, win: 0, draw: 0, lose: 0, gf: 0, ga: 0, gd: 0, points: 0 };
-            await setDoc(docRef, { teams: data });
-            
-            newTeamInput.value = ''; // Clear input
-            alert(`${newTeam} added successfully! You can now select it from the dropdown.`);
-        });
-
-        // 3. SCORE UPDATE LOGIC
         document.getElementById('scoreForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const t1 = document.getElementById('team1').value;
@@ -144,9 +86,9 @@
             const t2 = document.getElementById('team2').value;
             const s2 = parseInt(document.getElementById('score2').value);
 
-            if(!t1 || !t2) return alert("Please select both teams!");
-            if(t1 === t2) return alert("A team cannot play against itself!");
+            if(t1 === t2) return alert("Select different teams!");
 
+            // Fetch existing data
             const docSnap = await getDoc(docRef);
             let data = docSnap.exists() ? (docSnap.data().teams || {}) : {};
 
@@ -160,23 +102,22 @@
                 t.gd = t.gf - t.ga;
             }
 
+            // Calculate stats for both teams
             calcStats(t1, s1, s2);
             calcStats(t2, s2, s1);
 
+            // Save updated data to Firestore
             await setDoc(docRef, { teams: data });
             
-            alert("Match score updated live!");
+            alert("Live updated successfully!");
             document.getElementById('score1').value = '';
             document.getElementById('score2').value = '';
-            document.getElementById('team1').value = '';
-            document.getElementById('team2').value = '';
         });
 
-        // 4. RESET TOURNAMENT
         document.getElementById('resetBtn').addEventListener('click', async () => {
-            if(confirm("Are you sure? This will delete all teams and scores!")) {
+            if(confirm("Wipe all data?")) {
                 await setDoc(docRef, { teams: {} });
-                alert("Database reset successful!");
+                alert("Database reset!");
             }
         });
     </script>
