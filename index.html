@@ -3,65 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Update Score</title>
+    <title>Live Points Table</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: #0f172a; background-image: radial-gradient(circle at top right, #1e293b, #0f172a); color: #f8fafc; min-height: 100vh; padding: 2rem; display: flex; justify-content: center; align-items: flex-start; }
         .container { width: 100%; max-width: 1000px; display: flex; flex-direction: column; gap: 2rem; }
         .glass-card { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 2rem; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); }
         h2 { margin-bottom: 1.5rem; color: #38bdf8; text-align: center; font-weight: 600; letter-spacing: 1px; }
-        .match-inputs { display: flex; justify-content: center; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-        .team-input { display: flex; gap: 0.5rem; align-items: center; }
-        input, select { padding: 0.75rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.4); color: white; outline: none; transition: 0.3s; font-size: 1rem; }
-        input:focus, select:focus { border-color: #38bdf8; box-shadow: 0 0 8px rgba(56, 189, 248, 0.3); }
-        select { width: 160px; cursor: pointer; }
-        select option { background-color: #1e293b; color: white; }
-        input[type="number"] { width: 70px; text-align: center; font-weight: bold; }
-        .vs { font-weight: bold; color: #94a3b8; font-size: 1.2rem; }
-        button { width: 100%; padding: 1rem; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; transition: 0.3s; margin-bottom: 0.5rem; }
-        .submit-btn { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: white; }
-        .submit-btn:hover { background: linear-gradient(135deg, #0284c7, #1d4ed8); transform: translateY(-2px); }
-        .reset-btn { background: transparent; border: 1px solid #ef4444; color: #ef4444; }
-        .reset-btn:hover { background: #ef4444; color: white; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: center; }
+        th, td { padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        th { color: #94a3b8; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; }
+        tbody tr { transition: 0.2s ease-in-out; }
+        tbody tr:hover { background: rgba(255, 255, 255, 0.05); transform: scale(1.01); }
+        tbody tr:nth-child(1) td { color: #22c55e; font-weight: bold; }
+        .team-name-cell { text-align: left; font-weight: bold; }
+        .points-cell { font-weight: bold; color: #38bdf8; font-size: 1.1rem; }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="admin-panel glass-card">
-            <h2>Admin Control Panel</h2>
-            <form id="scoreForm">
-                <div class="match-inputs">
-                    <div class="team-input">
-                        <select id="team1" required>
-                            <option value="" disabled selected>Team A</option>
-                            <option value="REAL MADRID">REAL MADRID</option>
-                            <option value="BARCELONA">BARCELONA</option>
-                            <option value="ARSENAL">ARSENAL</option>
-                            <option value="BAYERN">BAYERN</option>
-                        </select>
-                        <input type="number" id="score1" placeholder="Goals" required min="0">
-                    </div>
-                    <span class="vs">VS</span>
-                    <div class="team-input">
-                        <input type="number" id="score2" placeholder="Goals" required min="0">
-                        <select id="team2" required>
-                            <option value="" disabled selected>Team B</option>
-                            <option value="REAL MADRID">REAL MADRID</option>
-                            <option value="BARCELONA">BARCELONA</option>
-                            <option value="ARSENAL">ARSENAL</option>
-                            <option value="BAYERN">BAYERN</option>
-                        </select>
-                    </div>
-                </div>
-                <button type="submit" class="submit-btn">Push Live Update</button>
-                <button type="button" id="resetBtn" class="reset-btn">Reset Database</button>
-            </form>
+        <div class="table-container glass-card">
+            <h2>Live Standings</h2>
+            <div class="table-wrapper">
+                <table id="pointsTable">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th style="text-align: left;">Team</th>
+                            <th>P</th>
+                            <th>W</th>
+                            <th>D</th>
+                            <th>L</th>
+                            <th>GF</th>
+                            <th>GA</th>
+                            <th>GD</th>
+                            <th>Pts</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Live Data from Firestore -->
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
+        import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/12.12.1/firebase-firestore.js";
 
         // Your exact Firebase config
         const firebaseConfig = {
@@ -75,50 +65,41 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+        const tableBody = document.getElementById('tableBody');
 
-        // Define the Firestore document reference
+        // Listen for live updates from Firestore
         const docRef = doc(db, "tournament", "data");
-
-        document.getElementById('scoreForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const t1 = document.getElementById('team1').value;
-            const s1 = parseInt(document.getElementById('score1').value);
-            const t2 = document.getElementById('team2').value;
-            const s2 = parseInt(document.getElementById('score2').value);
-
-            if(t1 === t2) return alert("Select different teams!");
-
-            // Fetch existing data
-            const docSnap = await getDoc(docRef);
-            let data = docSnap.exists() ? (docSnap.data().teams || {}) : {};
-
-            function calcStats(team, gf, ga) {
-                if (!data[team]) data[team] = { name: team, played: 0, win: 0, draw: 0, lose: 0, gf: 0, ga: 0, gd: 0, points: 0 };
-                let t = data[team];
-                t.played++; t.gf += gf; t.ga += ga;
-                if (gf > ga) { t.win++; t.points += 3; }
-                else if (gf === ga) { t.draw++; t.points += 1; }
-                else { t.lose++; }
-                t.gd = t.gf - t.ga;
-            }
-
-            // Calculate stats for both teams
-            calcStats(t1, s1, s2);
-            calcStats(t2, s2, s1);
-
-            // Save updated data to Firestore
-            await setDoc(docRef, { teams: data });
+        
+        onSnapshot(docRef, (docSnap) => {
+            tableBody.innerHTML = '';
             
-            alert("Live updated successfully!");
-            document.getElementById('score1').value = '';
-            document.getElementById('score2').value = '';
-        });
+            if (!docSnap.exists() || !docSnap.data().teams) return;
 
-        document.getElementById('resetBtn').addEventListener('click', async () => {
-            if(confirm("Wipe all data?")) {
-                await setDoc(docRef, { teams: {} });
-                alert("Database reset!");
-            }
+            let teams = Object.values(docSnap.data().teams);
+
+            // Auto Sorting Logic: Points > GD > GF
+            teams.sort((a, b) => {
+                if (b.points !== a.points) return b.points - a.points;
+                if (b.gd !== a.gd) return b.gd - a.gd;
+                return b.gf - a.gf;
+            });
+
+            teams.forEach((team, index) => {
+                const gdStr = team.gd > 0 ? '+' + team.gd : team.gd;
+                const row = `<tr>
+                    <td>${index + 1}</td>
+                    <td class="team-name-cell">${team.name}</td>
+                    <td>${team.played}</td>
+                    <td>${team.win}</td>
+                    <td>${team.draw}</td>
+                    <td>${team.lose}</td>
+                    <td>${team.gf}</td>
+                    <td>${team.ga}</td>
+                    <td>${gdStr}</td>
+                    <td class="points-cell">${team.points}</td>
+                </tr>`;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
         });
     </script>
 </body>
